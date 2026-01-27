@@ -1,0 +1,525 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #f5f6fa;
+    --surface: #ffffff;
+    --border: #e1e4e8;
+    --text: #1a1a2e;
+    --text-muted: #6b7280;
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --danger: #ef4444;
+    --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+}
+
+header {
+    background: var(--text);
+    color: #fff;
+    padding: 1.5rem 2rem;
+}
+
+.header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.subtitle {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.app-layout {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* Form Panel */
+.form-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.panel-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+}
+
+.panel-section h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+/* Courier Grid */
+.courier-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.courier-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.6rem 0.25rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.15s;
+}
+
+.courier-btn:hover {
+    border-color: var(--primary);
+}
+
+.courier-btn.selected {
+    border-color: var(--primary);
+    background: #eff6ff;
+}
+
+.courier-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.65rem;
+    color: #fff;
+}
+
+.courier-logo.royal-mail { background: #e4002b; }
+.courier-logo.ups { background: #351c15; }
+.courier-logo.evri { background: #6b2fa0; }
+.courier-logo.dpd { background: #dc0032; }
+.courier-logo.dhl { background: #ffcc00; color: #d40511; }
+.courier-logo.yodel { background: #00a651; }
+
+/* Form Fields */
+.form-group {
+    margin-bottom: 0.65rem;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: var(--text);
+}
+
+.form-group input, select {
+    width: 100%;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    transition: border-color 0.15s;
+}
+
+.form-group input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.55rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--primary-hover);
+}
+
+.btn-secondary {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #e5e7eb;
+}
+
+.btn-danger {
+    background: none;
+    color: var(--danger);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.form-actions .btn {
+    flex: 1;
+}
+
+/* Templates */
+.template-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.template-actions input {
+    flex: 1;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-family: inherit;
+}
+
+.template-actions input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.template-actions .btn {
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.template-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.template-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0.6rem;
+    background: var(--bg);
+    border-radius: 6px;
+    font-size: 0.8rem;
+}
+
+.template-item button:first-of-type {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    font-family: inherit;
+    flex: 1;
+    text-align: left;
+}
+
+/* Preview Panel */
+.preview-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.25rem;
+    position: sticky;
+    top: 1.5rem;
+}
+
+.preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.preview-header h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.export-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.export-actions .btn {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.75rem;
+}
+
+.preview-area {
+    display: flex;
+    justify-content: center;
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 2rem;
+    min-height: 500px;
+}
+
+.placeholder-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: 2rem;
+}
+
+/* Label Styles */
+.label-container {
+    width: 400px;
+}
+
+.shipping-label {
+    background: #fff;
+    border: 2px solid #000;
+    width: 400px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: #000;
+}
+
+.label-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 2px solid #000;
+}
+
+.label-courier-name {
+    font-size: 22px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.label-service-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border: 2px solid #000;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.label-body {
+    padding: 0;
+}
+
+.label-section {
+    padding: 10px 14px;
+    border-bottom: 1px solid #000;
+}
+
+.label-section:last-child {
+    border-bottom: none;
+}
+
+.label-section-title {
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.label-address-name {
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.label-address-line {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.label-postcode {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin-top: 4px;
+}
+
+.label-qr-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #000;
+}
+
+.label-qr-row canvas {
+    flex-shrink: 0;
+}
+
+.label-tracking-info {
+    flex: 1;
+}
+
+.label-tracking-number {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+}
+
+.label-tracking-label {
+    font-size: 8px;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 2px;
+}
+
+.label-barcode-text {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    text-align: center;
+    margin-top: 4px;
+    letter-spacing: 2px;
+}
+
+.label-meta-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 14px;
+    font-size: 10px;
+    border-top: 1px solid #000;
+}
+
+.label-meta-item strong {
+    display: block;
+    font-size: 8px;
+    text-transform: uppercase;
+    color: #666;
+}
+
+.label-footer {
+    padding: 6px 14px;
+    border-top: 2px solid #000;
+    font-size: 8px;
+    color: #666;
+    text-align: center;
+}
+
+/* Courier-specific header colors */
+.shipping-label.royal-mail .label-header {
+    background: #e4002b;
+    color: #fff;
+}
+
+.shipping-label.ups .label-header {
+    background: #351c15;
+    color: #ffb500;
+}
+
+.shipping-label.evri .label-header {
+    background: #6b2fa0;
+    color: #fff;
+}
+
+.shipping-label.dpd .label-header {
+    background: #dc0032;
+    color: #fff;
+}
+
+.shipping-label.dhl .label-header {
+    background: #ffcc00;
+    color: #d40511;
+}
+
+.shipping-label.yodel .label-header {
+    background: #00a651;
+    color: #fff;
+}
+
+.shipping-label .label-service-badge {
+    border-color: currentColor;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .app-layout {
+        grid-template-columns: 1fr;
+    }
+    .preview-panel {
+        position: static;
+    }
+}
+
+@media print {
+    body * { visibility: hidden; }
+    .shipping-label, .shipping-label * { visibility: visible; }
+    .shipping-label {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+}

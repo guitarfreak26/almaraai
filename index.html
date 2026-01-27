@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UK Shipping Label Generator | Almara AI</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <h1>Shipping Label Generator</h1>
+            <p class="subtitle">Generate print-ready UK shipping labels with QR codes</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="app-layout">
+            <!-- Left: Form -->
+            <section class="form-panel">
+                <div class="panel-section">
+                    <h2>Courier Template</h2>
+                    <div class="courier-grid" id="courierGrid">
+                        <button class="courier-btn selected" data-courier="royal-mail">
+                            <span class="courier-logo royal-mail">RM</span>
+                            <span>Royal Mail</span>
+                        </button>
+                        <button class="courier-btn" data-courier="ups">
+                            <span class="courier-logo ups">UPS</span>
+                            <span>UPS</span>
+                        </button>
+                        <button class="courier-btn" data-courier="evri">
+                            <span class="courier-logo evri">Evri</span>
+                            <span>Evri</span>
+                        </button>
+                        <button class="courier-btn" data-courier="dpd">
+                            <span class="courier-logo dpd">DPD</span>
+                            <span>DPD</span>
+                        </button>
+                        <button class="courier-btn" data-courier="dhl">
+                            <span class="courier-logo dhl">DHL</span>
+                            <span>DHL</span>
+                        </button>
+                        <button class="courier-btn" data-courier="yodel">
+                            <span class="courier-logo yodel">Y</span>
+                            <span>Yodel</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h2>Service Type</h2>
+                    <select id="serviceType">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <div class="panel-section">
+                    <h2>Sender Details</h2>
+                    <div class="form-group">
+                        <label for="senderName">Name / Business</label>
+                        <input type="text" id="senderName" placeholder="e.g. Almara Ltd">
+                    </div>
+                    <div class="form-group">
+                        <label for="senderAddr1">Address Line 1</label>
+                        <input type="text" id="senderAddr1" placeholder="e.g. 10 Downing Street">
+                    </div>
+                    <div class="form-group">
+                        <label for="senderAddr2">Address Line 2</label>
+                        <input type="text" id="senderAddr2" placeholder="e.g. Westminster">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="senderCity">City</label>
+                            <input type="text" id="senderCity" placeholder="e.g. London">
+                        </div>
+                        <div class="form-group">
+                            <label for="senderPostcode">Postcode</label>
+                            <input type="text" id="senderPostcode" placeholder="e.g. SW1A 2AA">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="senderPhone">Phone (optional)</label>
+                        <input type="tel" id="senderPhone" placeholder="e.g. 07700 900000">
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h2>Recipient Details</h2>
+                    <div class="form-group">
+                        <label for="recipientName">Name</label>
+                        <input type="text" id="recipientName" placeholder="e.g. Jane Smith">
+                    </div>
+                    <div class="form-group">
+                        <label for="recipientAddr1">Address Line 1</label>
+                        <input type="text" id="recipientAddr1" placeholder="e.g. 42 High Street">
+                    </div>
+                    <div class="form-group">
+                        <label for="recipientAddr2">Address Line 2</label>
+                        <input type="text" id="recipientAddr2" placeholder="e.g. Flat 3">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="recipientCity">City</label>
+                            <input type="text" id="recipientCity" placeholder="e.g. Manchester">
+                        </div>
+                        <div class="form-group">
+                            <label for="recipientPostcode">Postcode</label>
+                            <input type="text" id="recipientPostcode" placeholder="e.g. M1 1AA">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipientPhone">Phone (optional)</label>
+                        <input type="tel" id="recipientPhone" placeholder="e.g. 07700 900001">
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h2>Parcel Details</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="weight">Weight (kg)</label>
+                            <input type="number" id="weight" placeholder="e.g. 1.5" step="0.1" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="reference">Reference #</label>
+                            <input type="text" id="reference" placeholder="e.g. ORD-20241">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="instructions">Delivery Instructions</label>
+                        <input type="text" id="instructions" placeholder="e.g. Leave with neighbour">
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h2>Saved Templates</h2>
+                    <div class="template-actions">
+                        <input type="text" id="templateName" placeholder="Template name...">
+                        <button id="saveTemplateBtn" class="btn btn-secondary">Save Current</button>
+                    </div>
+                    <div id="templateList" class="template-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button id="generateBtn" class="btn btn-primary">Generate Label</button>
+                    <button id="clearBtn" class="btn btn-secondary">Clear Form</button>
+                </div>
+            </section>
+
+            <!-- Right: Preview -->
+            <section class="preview-panel">
+                <div class="preview-header">
+                    <h2>Label Preview</h2>
+                    <div class="export-actions">
+                        <button id="downloadPdfBtn" class="btn btn-primary" disabled>Download PDF</button>
+                        <button id="downloadPngBtn" class="btn btn-secondary" disabled>Download PNG</button>
+                        <button id="printBtn" class="btn btn-secondary" disabled>Print</button>
+                    </div>
+                </div>
+                <div class="preview-area">
+                    <div id="labelPreview" class="label-container">
+                        <div class="placeholder-message">
+                            <p>Fill in the details and click <strong>Generate Label</strong> to preview your shipping label here.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
