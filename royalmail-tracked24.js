@@ -1,9 +1,10 @@
 (function () {
     'use strict';
 
-    // ── DOM References ──────────────────────────────────────────────────
     const $ = (id) => document.getElementById(id);
 
+    // ── Form Elements ───────────────────────────────────────────────────
+    const labelStyle = $('labelStyle');
     const signatureType = $('signatureType');
     const trackingNumber = $('trackingNumber');
     const sortCode = $('sortCode');
@@ -37,50 +38,41 @@
     const templateNameInput = $('templateName');
     const templateList = $('templateList');
 
-    // All form fields for templates
     const fields = [
-        'signatureType', 'trackingNumber', 'sortCode', 'routingCode', 'reference',
+        'labelStyle', 'signatureType', 'trackingNumber', 'sortCode', 'routingCode', 'reference',
         'parcelType', 'weight', 'postage', 'postByDate',
         'recipientName', 'recipientAddr1', 'recipientAddr2', 'recipientCity', 'recipientPostcode',
         'senderName', 'senderAddr1', 'senderCity', 'senderPostcode',
         'sellerType', 'printedFrom', 'customPrintedFrom'
     ];
 
-    // Royal Mail logo SVG with crown
-    const ROYAL_MAIL_LOGO = `<svg viewBox="0 0 85 45" xmlns="http://www.w3.org/2000/svg" class="rm-logo-svg">
-        <!-- Crown -->
-        <g transform="translate(22, 2)">
-            <!-- Crown base -->
-            <path d="M0 20 L4 8 L10 14 L20 4 L30 14 L36 8 L40 20 Z" fill="#000" stroke="#000" stroke-width="1"/>
-            <!-- Crown jewels/dots -->
-            <circle cx="4" cy="6" r="2" fill="#000"/>
-            <circle cx="20" cy="2" r="2.5" fill="#000"/>
-            <circle cx="36" cy="6" r="2" fill="#000"/>
-            <!-- Cross on top -->
-            <rect x="18" y="0" width="4" height="4" fill="#000"/>
+    // ── Royal Mail Crown Logo SVG ───────────────────────────────────────
+    const CROWN_SVG = `
+        <g transform="translate(12, 3) scale(0.85)">
+            <path d="M2 22 L6 10 L13 16 L25 5 L37 16 L44 10 L48 22 Z" fill="#000"/>
+            <circle cx="6" cy="7" r="3" fill="#000"/>
+            <circle cx="25" cy="2" r="3.5" fill="#000"/>
+            <circle cx="44" cy="7" r="3" fill="#000"/>
+            <rect x="23" y="0" width="4" height="5" fill="#000"/>
         </g>
-        <!-- Royal Mail text -->
-        <text x="42.5" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#000">Royal Mail</text>
-    </svg>`;
+        <text x="50" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#000">Royal Mail</text>
+    `;
 
-    // ── Custom printed from toggle ──────────────────────────────────────
+    // ── Event Handlers ──────────────────────────────────────────────────
     printedFrom.addEventListener('change', () => {
         customPrintedFromGroup.style.display = printedFrom.value === 'Custom' ? 'block' : 'none';
     });
 
     // ── Helper Functions ────────────────────────────────────────────────
     function esc(str) {
-        const d = document.createElement('div');
-        d.textContent = str || '';
-        return d.innerHTML;
+        return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     function removeSpaces(str) {
         return (str || '').replace(/\s+/g, '');
     }
 
-    function formatTrackingForDisplay(tracking) {
-        // Format: MZ 3170 8295 1GB
+    function formatTrackingDisplay(tracking) {
         const clean = removeSpaces(tracking).toUpperCase();
         if (clean.length >= 13) {
             return `${clean.slice(0, 2)} ${clean.slice(2, 6)} ${clean.slice(6, 10)} ${clean.slice(10)}`;
@@ -93,16 +85,16 @@
         return match ? parseFloat(match[0]) : 0;
     }
 
-    function formatPostageForDataMatrix(val) {
+    function formatPostageForDM(val) {
         const pence = Math.round(parsePostage(val) * 100);
         return pence.toString().padStart(5, '0');
     }
 
-    function formatReferenceForDataMatrix(ref) {
+    function formatRefForDM(ref) {
         return removeSpaces((ref || '').replace(/-/g, '')).toUpperCase();
     }
 
-    function generateDateCode() {
+    function genDateCode() {
         const now = new Date();
         const dd = now.getDate().toString().padStart(2, '0');
         const mm = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -111,68 +103,57 @@
         return `${dd}${mm}${yy}${seq}`;
     }
 
-    // ── DataMatrix Encoding (Mailmark format) ───────────────────────────
-    function buildDataMatrixContent(data) {
+    // ── DataMatrix Content ──────────────────────────────────────────────
+    function buildDMContent(data) {
         const accountId = '8215FA';
-        const refCode = formatReferenceForDataMatrix(data.reference);
+        const refCode = formatRefForDM(data.reference);
         const serviceCode = data.signatureType === 'signature' ? '00010001' : '00020001';
-        const postageFmt = formatPostageForDataMatrix(data.postage);
-        const dateCode = generateDateCode();
+        const postageFmt = formatPostageForDM(data.postage);
+        const dateCode = genDateCode();
         const trackingClean = removeSpaces(data.tracking).toUpperCase();
-        const destPostcode = removeSpaces(data.recipientPostcode).toUpperCase();
-        const returnPostcode = removeSpaces(data.senderPostcode).toUpperCase();
+        const destPC = removeSpaces(data.recipientPostcode).toUpperCase();
+        const returnPC = removeSpaces(data.senderPostcode).toUpperCase();
+        let routeCode = removeSpaces(data.routingCode).toUpperCase() || destPC.slice(0, 3);
 
-        let routeCode = removeSpaces(data.routingCode).toUpperCase();
-        if (!routeCode) {
-            routeCode = destPostcode.slice(0, 3);
-        }
-
-        return `JGB${accountId}${refCode}${serviceCode}${postageFmt}${dateCode}062${trackingClean}${routeCode.slice(0,3)}${destPostcode}GB${returnPostcode}`;
+        return `JGB${accountId}${refCode}${serviceCode}${postageFmt}${dateCode}062${trackingClean}${routeCode.slice(0,3)}${destPC}GB${returnPC}`;
     }
 
-    // ── Generate Barcodes ───────────────────────────────────────────────
-    async function generateDataMatrix(content, canvasId) {
+    // ── Barcode Generation ──────────────────────────────────────────────
+    async function genDataMatrix(content, canvasId) {
         try {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
-
-            // DataMatrix matching Royal Mail label size (~72x72px display)
             bwipjs.toCanvas(canvas, {
                 bcid: 'datamatrix',
                 text: content,
-                scale: 3,
-                height: 24,
-                width: 24,
+                scale: 4,
                 padding: 0,
-                includetext: false,
             });
         } catch (e) {
-            console.error('DataMatrix generation failed:', e);
+            console.error('DataMatrix error:', e);
         }
     }
 
-    async function generateCode128(content, canvasId) {
+    async function genCode128(content, canvasId) {
         try {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
-
-            // Code 128 matching Royal Mail label size
             bwipjs.toCanvas(canvas, {
                 bcid: 'code128',
                 text: content,
                 scale: 2,
-                height: 18,
-                width: 200,
+                height: 20,
                 includetext: false,
             });
         } catch (e) {
-            console.error('Code128 generation failed:', e);
+            console.error('Code128 error:', e);
         }
     }
 
-    // ── Collect Form Data ───────────────────────────────────────────────
+    // ── Form Data ───────────────────────────────────────────────────────
     function getFormData() {
         return {
+            labelStyle: labelStyle.value,
             signatureType: signatureType.value,
             tracking: trackingNumber.value.trim(),
             sortCode: sortCode.value.trim(),
@@ -197,6 +178,7 @@
     }
 
     function setFormData(data) {
+        if (data.labelStyle) labelStyle.value = data.labelStyle;
         if (data.signatureType) signatureType.value = data.signatureType;
         if (data.tracking) trackingNumber.value = data.tracking;
         if (data.sortCode) sortCode.value = data.sortCode;
@@ -232,142 +214,168 @@
     generateBtn.addEventListener('click', async () => {
         const data = getFormData();
 
-        if (!data.tracking) {
-            alert('Please enter a tracking number.');
-            return;
-        }
-        if (!data.recipientPostcode) {
-            alert('Please enter the recipient postcode.');
-            return;
-        }
+        if (!data.tracking) { alert('Enter tracking number.'); return; }
+        if (!data.recipientPostcode) { alert('Enter recipient postcode.'); return; }
 
-        const isSignature = data.signatureType === 'signature';
-        const signatureText = isSignature ? '' : 'No Signature';
-        const trackingDisplay = formatTrackingForDisplay(data.tracking);
+        const isClickDrop = data.labelStyle === 'clickdrop';
+        const sigText = data.signatureType === 'signature' ? '' : 'No Signature';
+        const trackingDisplay = formatTrackingDisplay(data.tracking);
         const trackingClean = removeSpaces(data.tracking).toUpperCase();
-
-        // Build return address lines
-        const returnLines = [
-            'Return Address',
-            data.senderName,
-            data.senderAddr1,
-            data.senderCity,
-            data.senderPostcode.toUpperCase()
-        ].filter(Boolean);
-
-        // Postage display
         const postageNum = parsePostage(data.postage);
         const postageDisplay = postageNum > 0 ? `£${postageNum.toFixed(2)}` : '';
 
-        const labelHtml = `
-            <div class="rml">
-                <!-- Row 1: Header -->
-                <div class="rml-header">
-                    <div class="rml-header-left">
-                        <div class="rml-tracked">Tracked</div>
-                        <div class="rml-nosig">${signatureText}</div>
-                    </div>
-                    <div class="rml-header-mid">
-                        <div class="rml-24">24</div>
-                    </div>
-                    <div class="rml-header-right">
-                        <div class="rml-delivered">Delivered By</div>
-                        <div class="rml-logo-box">
-                            ${ROYAL_MAIL_LOGO}
-                        </div>
-                        <div class="rml-postage-paid">Postage Paid GB</div>
-                    </div>
-                </div>
+        // Return address lines
+        const returnLines = ['Return Address', data.senderName, data.senderAddr1, data.senderCity, data.senderPostcode.toUpperCase()].filter(Boolean);
 
-                <!-- Row 2: Routing -->
-                <div class="rml-routing">
-                    <div class="rml-codes">
-                        <span class="rml-code">${esc(data.sortCode.toUpperCase())}</span>
-                        <span class="rml-code rml-code-inv">${esc(data.routingCode.toUpperCase())}</span>
-                    </div>
-                    <div class="rml-parcel-box">
-                        <div class="rml-parcel-type">${esc(data.parcelType)}</div>
-                        <div class="rml-parcel-weight">${esc(data.weight)}</div>
-                    </div>
-                </div>
+        // Build SVG label - exact Royal Mail template
+        const svgLabel = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" class="rm-svg-label">
+    <defs>
+        <style>
+            .rm-text { font-family: Arial, Helvetica, sans-serif; fill: #000; }
+            .rm-bold { font-weight: 700; }
+            .rm-black { font-weight: 900; }
+            .rm-italic { font-style: italic; }
+            .rm-small { font-size: 10px; }
+            .rm-tiny { font-size: 8px; }
+        </style>
+    </defs>
 
-                <!-- Row 3: Reference -->
-                <div class="rml-ref">${esc(data.reference)}</div>
+    <!-- Background -->
+    <rect width="400" height="600" fill="#fff"/>
+    <rect x="0.5" y="0.5" width="399" height="599" fill="none" stroke="#000" stroke-width="1"/>
 
-                <!-- Row 4: Barcodes -->
-                <div class="rml-barcodes">
-                    <div class="rml-dm">
-                        <canvas id="dmCanvas"></canvas>
-                    </div>
-                    <div class="rml-c128">
-                        <canvas id="c128Canvas"></canvas>
-                        <div class="rml-tracking">${trackingDisplay}</div>
-                    </div>
-                </div>
+    <!-- Row 1: Header -->
+    <line x1="0" y1="85" x2="400" y2="85" stroke="#000" stroke-width="1"/>
 
-                <!-- Row 5: Address -->
-                <div class="rml-address">
-                    <div class="rml-recipient">
-                        <div class="rml-addr-line rml-addr-name">${esc(data.recipientName.toUpperCase())}</div>
-                        ${data.recipientAddr1 ? `<div class="rml-addr-line">${esc(data.recipientAddr1)}</div>` : ''}
-                        ${data.recipientAddr2 ? `<div class="rml-addr-line">${esc(data.recipientAddr2)}</div>` : ''}
-                        ${data.recipientCity ? `<div class="rml-addr-line">${esc(data.recipientCity)}</div>` : ''}
-                        <div class="rml-addr-line rml-addr-pc">${esc(data.recipientPostcode.toUpperCase())}</div>
-                    </div>
-                    <div class="rml-return">
-                        ${returnLines.map(l => `<span>${esc(l)}</span>`).join('')}
-                    </div>
-                </div>
+    <!-- Tracked text -->
+    <text x="15" y="45" class="rm-text rm-black rm-italic" font-size="38">Tracked</text>
+    <text x="15" y="70" class="rm-text" font-size="18">${esc(sigText)}</text>
 
-                <!-- Row 6: Footer info -->
-                <div class="rml-footer">
-                    <div class="rml-seller">${data.sellerType ? esc(data.sellerType.toUpperCase()) : ''}</div>
-                    <div class="rml-payment">
-                        ${postageDisplay ? `<div class="rml-pay-row"><span>Postage Cost</span><strong>${postageDisplay}</strong></div>` : ''}
-                        ${data.postByDate ? `<div class="rml-pay-row"><span>Post by the end of</span><strong>${esc(data.postByDate)}</strong></div>` : ''}
-                        <div class="rml-pay-row"><span>Paid and printed from</span><strong>${esc(data.printedFrom)}</strong></div>
-                    </div>
-                </div>
+    <!-- 24 -->
+    <text x="200" y="65" class="rm-text rm-black" font-size="72" text-anchor="middle">24</text>
 
-                <!-- Row 7: Carbon footer -->
-                <div class="rml-carbon">Royal Mail: UK's lowest average parcel carbon footprint 200g CO2e</div>
-            </div>
-        `;
+    <!-- Right side - Delivered By + Logo -->
+    <text x="385" y="18" class="rm-text rm-small" text-anchor="end">Delivered By</text>
+    <rect x="295" y="22" width="90" height="48" rx="3" fill="none" stroke="#000" stroke-width="1.5"/>
+    <svg x="295" y="22" width="90" height="48" viewBox="0 0 100 55">
+        ${CROWN_SVG}
+    </svg>
+    <text x="385" y="82" class="rm-text rm-tiny" text-anchor="end">Postage Paid GB</text>
 
-        labelPreview.innerHTML = labelHtml;
+    <!-- Row 2: Routing codes -->
+    <line x1="0" y1="${isClickDrop ? 140 : 140}" x2="400" y2="${isClickDrop ? 140 : 140}" stroke="#000" stroke-width="1"/>
 
-        // Generate barcodes
+    <!-- Sort code boxes -->
+    <rect x="15" y="95" width="70" height="38" fill="#000"/>
+    <text x="50" y="122" class="rm-text rm-black" font-size="28" fill="#fff" text-anchor="middle">${esc(data.sortCode.toUpperCase())}</text>
+
+    <rect x="90" y="95" width="70" height="38" fill="#000"/>
+    <text x="125" y="122" class="rm-text rm-black" font-size="28" fill="#fff" text-anchor="middle">${esc(data.routingCode.toUpperCase())}</text>
+
+    <!-- Parcel info box (Click & Drop style) -->
+    ${isClickDrop ? `
+    <rect x="280" y="95" width="105" height="38" fill="none" stroke="#000" stroke-width="1"/>
+    <text x="332" y="113" class="rm-text rm-bold" font-size="12" text-anchor="middle">${esc(data.parcelType)}</text>
+    <text x="332" y="130" class="rm-text rm-bold" font-size="16" text-anchor="middle">${esc(data.weight)}</text>
+    ` : ''}
+
+    <!-- Row 3: Reference (eBay style) -->
+    ${!isClickDrop ? `
+    <line x1="0" y1="165" x2="400" y2="165" stroke="#000" stroke-width="1"/>
+    <text x="15" y="157" class="rm-text" font-size="13" fill="#444">${esc(data.reference)}</text>
+    ` : ''}
+
+    <!-- Row 4: Barcodes -->
+    <line x1="0" y1="${isClickDrop ? 265 : 290}" x2="400" y2="${isClickDrop ? 265 : 290}" stroke="#000" stroke-width="1"/>
+
+    <!-- DataMatrix placeholder -->
+    <foreignObject x="15" y="${isClickDrop ? 150 : 175}" width="100" height="100">
+        <canvas xmlns="http://www.w3.org/1999/xhtml" id="dmCanvas" width="100" height="100" style="width:100px;height:100px;"></canvas>
+    </foreignObject>
+
+    <!-- Code128 placeholder -->
+    <foreignObject x="130" y="${isClickDrop ? 160 : 185}" width="255" height="70">
+        <canvas xmlns="http://www.w3.org/1999/xhtml" id="c128Canvas" width="255" height="50" style="width:255px;height:50px;"></canvas>
+    </foreignObject>
+
+    <!-- Tracking number text -->
+    <text x="257" y="${isClickDrop ? 250 : 275}" class="rm-text" font-size="14" text-anchor="middle">${esc(trackingDisplay)}</text>
+
+    <!-- Row 5: Address -->
+    <line x1="0" y1="${isClickDrop ? 420 : 445}" x2="400" y2="${isClickDrop ? 420 : 445}" stroke="#000" stroke-width="1"/>
+
+    <!-- Recipient address -->
+    <text x="15" y="${isClickDrop ? 295 : 320}" class="rm-text rm-bold" font-size="20">${esc(data.recipientName.toUpperCase())}</text>
+    <text x="15" y="${isClickDrop ? 320 : 345}" class="rm-text" font-size="17">${esc(data.recipientAddr1)}</text>
+    <text x="15" y="${isClickDrop ? 345 : 370}" class="rm-text" font-size="17">${esc(data.recipientAddr2)}</text>
+    <text x="15" y="${isClickDrop ? 370 : 395}" class="rm-text" font-size="17">${esc(data.recipientCity)}</text>
+    <text x="15" y="${isClickDrop ? 400 : 425}" class="rm-text rm-bold" font-size="24">${esc(data.recipientPostcode.toUpperCase())}</text>
+
+    <!-- Return address (rotated) -->
+    <g transform="translate(385, ${isClickDrop ? 410 : 435}) rotate(-90)">
+        ${returnLines.map((line, i) => `<text x="${i * 12}" y="0" class="rm-text rm-tiny" fill="#333">${esc(line)}</text>`).join('')}
+    </g>
+    <line x1="365" y1="${isClickDrop ? 275 : 300}" x2="365" y2="${isClickDrop ? 410 : 435}" stroke="#ccc" stroke-width="1"/>
+
+    <!-- Row 6: Footer -->
+    <line x1="0" y1="${isClickDrop ? 530 : 545}" x2="400" y2="${isClickDrop ? 530 : 545}" stroke="#000" stroke-width="1"/>
+
+    <!-- Seller type (eBay style) -->
+    ${!isClickDrop && data.sellerType ? `
+    <text x="15" y="${445 + 25}" class="rm-text rm-black" font-size="20">${esc(data.sellerType.toUpperCase().split(' ')[0] || '')}</text>
+    <text x="15" y="${445 + 50}" class="rm-text rm-black" font-size="20">${esc(data.sellerType.toUpperCase().split(' ').slice(1).join(' ') || '')}</text>
+    ` : ''}
+
+    <!-- Payment info -->
+    ${postageDisplay ? `
+    <text x="385" y="${isClickDrop ? 445 : 470}" class="rm-text rm-small" text-anchor="end">Postage Cost</text>
+    <text x="385" y="${isClickDrop ? 465 : 490}" class="rm-text rm-bold" font-size="20" text-anchor="end">${esc(postageDisplay)}</text>
+    ` : ''}
+
+    <text x="385" y="${isClickDrop ? 485 : 505}" class="rm-text rm-small" text-anchor="end">Post by the end of</text>
+    <text x="385" y="${isClickDrop ? 502 : 520}" class="rm-text rm-bold" font-size="14" text-anchor="end">${esc(data.postByDate)}</text>
+
+    <text x="385" y="${isClickDrop ? 518 : 533}" class="rm-text rm-small" text-anchor="end">Paid and printed from</text>
+    <text x="385" y="${isClickDrop ? 532 : 545}" class="rm-text rm-bold" font-size="14" text-anchor="end">${esc(data.printedFrom)}</text>
+
+    <!-- Row 7: Carbon footer -->
+    <text x="15" y="${isClickDrop ? 555 : 575}" class="rm-text" font-size="9" fill="#666">Royal Mail: UK's lowest average parcel carbon footprint 200g CO2e</text>
+</svg>`;
+
+        labelPreview.innerHTML = `<div class="svg-label-container">${svgLabel}</div>`;
+
+        // Generate barcodes after SVG is in DOM
         setTimeout(async () => {
-            const dmContent = buildDataMatrixContent(data);
-            console.log('DataMatrix:', dmContent);
-            await generateDataMatrix(dmContent, 'dmCanvas');
-            await generateCode128(trackingClean, 'c128Canvas');
-        }, 50);
+            const dmContent = buildDMContent(data);
+            console.log('DM:', dmContent);
+            await genDataMatrix(dmContent, 'dmCanvas');
+            await genCode128(trackingClean, 'c128Canvas');
+        }, 100);
 
         downloadPdfBtn.disabled = false;
         downloadPngBtn.disabled = false;
         printBtn.disabled = false;
     });
 
-    // ── Export: PNG ─────────────────────────────────────────────────────
+    // ── Export PNG ──────────────────────────────────────────────────────
     downloadPngBtn.addEventListener('click', async () => {
-        const label = labelPreview.querySelector('.rml');
-        if (!label) return;
-        const canvas = await html2canvas(label, { scale: 4, backgroundColor: '#ffffff' });
+        const container = labelPreview.querySelector('.svg-label-container');
+        if (!container) return;
+        const canvas = await html2canvas(container, { scale: 4, backgroundColor: '#ffffff' });
         const link = document.createElement('a');
-        link.download = 'royal-mail-tracked24-label.png';
+        link.download = 'royal-mail-tracked24.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
     });
 
-    // ── Export: PDF ─────────────────────────────────────────────────────
+    // ── Export PDF ──────────────────────────────────────────────────────
     downloadPdfBtn.addEventListener('click', async () => {
-        const label = labelPreview.querySelector('.rml');
-        if (!label) return;
-        const canvas = await html2canvas(label, { scale: 4, backgroundColor: '#ffffff' });
+        const container = labelPreview.querySelector('.svg-label-container');
+        if (!container) return;
+        const canvas = await html2canvas(container, { scale: 4, backgroundColor: '#ffffff' });
         const imgData = canvas.toDataURL('image/png');
         const { jsPDF } = window.jspdf;
-        // 4x6 inch label
         const pdf = new jsPDF({ unit: 'mm', format: [101.6, 152.4] });
         const pdfW = pdf.internal.pageSize.getWidth();
         const pdfH = pdf.internal.pageSize.getHeight();
@@ -375,7 +383,7 @@
         const w = canvas.width * ratio;
         const h = canvas.height * ratio;
         pdf.addImage(imgData, 'PNG', (pdfW - w) / 2, (pdfH - h) / 2, w, h);
-        pdf.save('royal-mail-tracked24-label.pdf');
+        pdf.save('royal-mail-tracked24.pdf');
     });
 
     // ── Print ───────────────────────────────────────────────────────────
@@ -383,7 +391,7 @@
 
     // ── Clear ───────────────────────────────────────────────────────────
     clearBtn.addEventListener('click', () => {
-        fields.forEach((f) => {
+        fields.forEach(f => {
             const el = $(f);
             if (el) {
                 if (el.tagName === 'SELECT') el.selectedIndex = 0;
@@ -391,7 +399,7 @@
             }
         });
         customPrintedFromGroup.style.display = 'none';
-        labelPreview.innerHTML = '<div class="placeholder-message"><p>Fill in the details and click <strong>Generate Label</strong> to preview.</p></div>';
+        labelPreview.innerHTML = '<div class="placeholder-message"><p>Fill in details and click <strong>Generate Label</strong></p></div>';
         downloadPdfBtn.disabled = true;
         downloadPngBtn.disabled = true;
         printBtn.disabled = true;
@@ -405,46 +413,35 @@
         catch { return {}; }
     }
 
-    function saveTemplates(templates) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
-    }
+    function saveTemplates(t) { localStorage.setItem(STORAGE_KEY, JSON.stringify(t)); }
 
     function renderTemplates() {
         const templates = getTemplates();
         const names = Object.keys(templates);
-        if (names.length === 0) {
+        if (!names.length) {
             templateList.innerHTML = '<div style="font-size:0.8rem;color:#555;">No saved templates.</div>';
             return;
         }
-        templateList.innerHTML = names.map(name => `
+        templateList.innerHTML = names.map(n => `
             <div class="template-item">
-                <button onclick="window._loadTemplate('${esc(name)}')">${esc(name)}</button>
-                <button class="btn btn-danger" onclick="window._deleteTemplate('${esc(name)}')">Delete</button>
+                <button onclick="window._loadTpl('${esc(n)}')">${esc(n)}</button>
+                <button class="btn btn-danger" onclick="window._delTpl('${esc(n)}')">Delete</button>
             </div>
         `).join('');
     }
 
     saveTemplateBtn.addEventListener('click', () => {
         const name = templateNameInput.value.trim();
-        if (!name) { alert('Enter a template name.'); return; }
-        const templates = getTemplates();
-        templates[name] = getFormData();
-        saveTemplates(templates);
+        if (!name) { alert('Enter template name.'); return; }
+        const t = getTemplates();
+        t[name] = getFormData();
+        saveTemplates(t);
         templateNameInput.value = '';
         renderTemplates();
     });
 
-    window._loadTemplate = (name) => {
-        const templates = getTemplates();
-        if (templates[name]) setFormData(templates[name]);
-    };
-
-    window._deleteTemplate = (name) => {
-        const templates = getTemplates();
-        delete templates[name];
-        saveTemplates(templates);
-        renderTemplates();
-    };
+    window._loadTpl = n => { const t = getTemplates(); if (t[n]) setFormData(t[n]); };
+    window._delTpl = n => { const t = getTemplates(); delete t[n]; saveTemplates(t); renderTemplates(); };
 
     renderTemplates();
 })();

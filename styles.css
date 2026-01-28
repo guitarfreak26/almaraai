@@ -948,3 +948,34 @@ select option {
     font-size: 7px;
     color: #666;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   SVG-BASED ROYAL MAIL LABEL
+   ══════════════════════════════════════════════════════════════════ */
+
+.svg-label-container {
+    width: 400px;
+    height: 600px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+.rm-svg-label {
+    width: 400px;
+    height: 600px;
+    display: block;
+}
+
+.rm-svg-label canvas {
+    display: block;
+}
+
+@media print {
+    body * { visibility: hidden; }
+    .svg-label-container, .svg-label-container * { visibility: visible; }
+    .svg-label-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        box-shadow: none;
+    }
+}
