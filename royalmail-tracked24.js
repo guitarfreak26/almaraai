@@ -46,6 +46,23 @@
         'sellerType', 'printedFrom', 'customPrintedFrom'
     ];
 
+    // Royal Mail logo SVG with crown
+    const ROYAL_MAIL_LOGO = `<svg viewBox="0 0 85 45" xmlns="http://www.w3.org/2000/svg" class="rm-logo-svg">
+        <!-- Crown -->
+        <g transform="translate(22, 2)">
+            <!-- Crown base -->
+            <path d="M0 20 L4 8 L10 14 L20 4 L30 14 L36 8 L40 20 Z" fill="#000" stroke="#000" stroke-width="1"/>
+            <!-- Crown jewels/dots -->
+            <circle cx="4" cy="6" r="2" fill="#000"/>
+            <circle cx="20" cy="2" r="2.5" fill="#000"/>
+            <circle cx="36" cy="6" r="2" fill="#000"/>
+            <!-- Cross on top -->
+            <rect x="18" y="0" width="4" height="4" fill="#000"/>
+        </g>
+        <!-- Royal Mail text -->
+        <text x="42.5" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#000">Royal Mail</text>
+    </svg>`;
+
     // ── Custom printed from toggle ──────────────────────────────────────
     printedFrom.addEventListener('change', () => {
         customPrintedFromGroup.style.display = printedFrom.value === 'Custom' ? 'block' : 'none';
@@ -72,39 +89,31 @@
     }
 
     function parsePostage(val) {
-        // Extract numeric value from "£4.29" or "4.29"
         const match = (val || '').replace(/[£,]/g, '').match(/[\d.]+/);
         return match ? parseFloat(match[0]) : 0;
     }
 
     function formatPostageForDataMatrix(val) {
-        // Convert £4.29 to "00429" (5 digits, pence)
         const pence = Math.round(parsePostage(val) * 100);
         return pence.toString().padStart(5, '0');
     }
 
     function formatReferenceForDataMatrix(ref) {
-        // Remove dashes and spaces: "11-02D 71C AC8" -> "1102D71CAC8"
         return removeSpaces((ref || '').replace(/-/g, '')).toUpperCase();
     }
 
     function generateDateCode() {
-        // Generate a date-based code (format appears to be DDMMYY + sequence)
         const now = new Date();
         const dd = now.getDate().toString().padStart(2, '0');
         const mm = (now.getMonth() + 1).toString().padStart(2, '0');
         const yy = now.getFullYear().toString().slice(-2);
-        // Add a random 3-digit sequence
         const seq = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
         return `${dd}${mm}${yy}${seq}`;
     }
 
     // ── DataMatrix Encoding (Mailmark format) ───────────────────────────
     function buildDataMatrixContent(data) {
-        // Format: JGB [AccountID] [Reference] [ServiceCode][Postage] [DateCode]062 [Tracking] [RouteCode] [DestPostcode] GB [ReturnPostcode]
-        // Example: JGB 8215FA1102D71CAC80002000100429070425062 MZ317082951GB817 N49PT GB M610YU
-
-        const accountId = '8215FA'; // Fixed account ID from examples
+        const accountId = '8215FA';
         const refCode = formatReferenceForDataMatrix(data.reference);
         const serviceCode = data.signatureType === 'signature' ? '00010001' : '00020001';
         const postageFmt = formatPostageForDataMatrix(data.postage);
@@ -113,18 +122,12 @@
         const destPostcode = removeSpaces(data.recipientPostcode).toUpperCase();
         const returnPostcode = removeSpaces(data.senderPostcode).toUpperCase();
 
-        // Route code - use provided or derive from postcode
         let routeCode = removeSpaces(data.routingCode).toUpperCase();
         if (!routeCode) {
-            // Simple derivation from postcode
             routeCode = destPostcode.slice(0, 3);
         }
 
-        // Build the DataMatrix string
-        // Note: The exact format has the tracking number followed by a shorter route indicator
-        const dataMatrixContent = `JGB${accountId}${refCode}${serviceCode}${postageFmt}${dateCode}062${trackingClean}${routeCode.slice(0,3)}${destPostcode}GB${returnPostcode}`;
-
-        return dataMatrixContent;
+        return `JGB${accountId}${refCode}${serviceCode}${postageFmt}${dateCode}062${trackingClean}${routeCode.slice(0,3)}${destPostcode}GB${returnPostcode}`;
     }
 
     // ── Generate Barcodes ───────────────────────────────────────────────
@@ -133,12 +136,14 @@
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
 
+            // DataMatrix matching Royal Mail label size (~72x72px display)
             bwipjs.toCanvas(canvas, {
                 bcid: 'datamatrix',
                 text: content,
                 scale: 3,
-                height: 25,
-                width: 25,
+                height: 24,
+                width: 24,
+                padding: 0,
                 includetext: false,
             });
         } catch (e) {
@@ -151,11 +156,13 @@
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
 
+            // Code 128 matching Royal Mail label size
             bwipjs.toCanvas(canvas, {
                 bcid: 'code128',
                 text: content,
                 scale: 2,
-                height: 15,
+                height: 18,
+                width: 200,
                 includetext: false,
             });
         } catch (e) {
@@ -225,7 +232,6 @@
     generateBtn.addEventListener('click', async () => {
         const data = getFormData();
 
-        // Validation
         if (!data.tracking) {
             alert('Please enter a tracking number.');
             return;
@@ -240,8 +246,8 @@
         const trackingDisplay = formatTrackingForDisplay(data.tracking);
         const trackingClean = removeSpaces(data.tracking).toUpperCase();
 
-        // Build return address for rotated display
-        const returnAddressLines = [
+        // Build return address lines
+        const returnLines = [
             'Return Address',
             data.senderName,
             data.senderAddr1,
@@ -250,103 +256,94 @@
         ].filter(Boolean);
 
         // Postage display
-        const postageDisplay = data.postage.startsWith('£') ? data.postage : `£${data.postage}`;
+        const postageNum = parsePostage(data.postage);
+        const postageDisplay = postageNum > 0 ? `£${postageNum.toFixed(2)}` : '';
 
         const labelHtml = `
-            <div class="rm-label">
-                <!-- Header Row -->
-                <div class="rm-header">
-                    <div class="rm-header-left">
-                        <div class="rm-service-name">Tracked</div>
-                        <div class="rm-signature-text">${signatureText}</div>
+            <div class="rml">
+                <!-- Row 1: Header -->
+                <div class="rml-header">
+                    <div class="rml-header-left">
+                        <div class="rml-tracked">Tracked</div>
+                        <div class="rml-nosig">${signatureText}</div>
                     </div>
-                    <div class="rm-header-center">
-                        <div class="rm-24">24</div>
+                    <div class="rml-header-mid">
+                        <div class="rml-24">24</div>
                     </div>
-                    <div class="rm-header-right">
-                        <div class="rm-delivered-by">Delivered By</div>
-                        <div class="rm-logo">
-                            <svg viewBox="0 0 100 60" class="rm-crown-logo">
-                                <text x="50" y="35" text-anchor="middle" font-size="12" font-weight="bold" fill="#000">Royal Mail</text>
-                            </svg>
+                    <div class="rml-header-right">
+                        <div class="rml-delivered">Delivered By</div>
+                        <div class="rml-logo-box">
+                            ${ROYAL_MAIL_LOGO}
                         </div>
-                        <div class="rm-postage-paid">Postage Paid GB</div>
+                        <div class="rml-postage-paid">Postage Paid GB</div>
                     </div>
                 </div>
 
-                <!-- Routing Row -->
-                <div class="rm-routing-row">
-                    <div class="rm-routing-codes">
-                        <span class="rm-sort-code">${esc(data.sortCode.toUpperCase())}</span>
-                        <span class="rm-route-code">${esc(data.routingCode.toUpperCase())}</span>
+                <!-- Row 2: Routing -->
+                <div class="rml-routing">
+                    <div class="rml-codes">
+                        <span class="rml-code">${esc(data.sortCode.toUpperCase())}</span>
+                        <span class="rml-code rml-code-inv">${esc(data.routingCode.toUpperCase())}</span>
                     </div>
-                    <div class="rm-parcel-info">
-                        <div class="rm-parcel-type">${esc(data.parcelType)}</div>
-                        <div class="rm-weight">${esc(data.weight)}</div>
-                    </div>
-                </div>
-
-                <!-- Reference Row -->
-                <div class="rm-reference-row">
-                    ${esc(data.reference)}
-                </div>
-
-                <!-- Barcode Row -->
-                <div class="rm-barcode-row">
-                    <div class="rm-datamatrix">
-                        <canvas id="datamatrixCanvas"></canvas>
-                    </div>
-                    <div class="rm-code128-container">
-                        <canvas id="code128Canvas"></canvas>
-                        <div class="rm-tracking-text">${trackingDisplay}</div>
+                    <div class="rml-parcel-box">
+                        <div class="rml-parcel-type">${esc(data.parcelType)}</div>
+                        <div class="rml-parcel-weight">${esc(data.weight)}</div>
                     </div>
                 </div>
 
-                <!-- Address Section -->
-                <div class="rm-address-section">
-                    <div class="rm-recipient-address">
-                        <div class="rm-address-line rm-name">${esc(data.recipientName.toUpperCase())}</div>
-                        ${data.recipientAddr1 ? `<div class="rm-address-line">${esc(data.recipientAddr1.toUpperCase())}</div>` : ''}
-                        ${data.recipientAddr2 ? `<div class="rm-address-line">${esc(data.recipientAddr2.toUpperCase())}</div>` : ''}
-                        ${data.recipientCity ? `<div class="rm-address-line">${esc(data.recipientCity.toUpperCase())}</div>` : ''}
-                        <div class="rm-address-line rm-postcode">${esc(data.recipientPostcode.toUpperCase())}</div>
+                <!-- Row 3: Reference -->
+                <div class="rml-ref">${esc(data.reference)}</div>
+
+                <!-- Row 4: Barcodes -->
+                <div class="rml-barcodes">
+                    <div class="rml-dm">
+                        <canvas id="dmCanvas"></canvas>
                     </div>
-                    <div class="rm-return-address">
-                        ${returnAddressLines.map(line => `<span>${esc(line)}</span>`).join('')}
+                    <div class="rml-c128">
+                        <canvas id="c128Canvas"></canvas>
+                        <div class="rml-tracking">${trackingDisplay}</div>
                     </div>
                 </div>
 
-                <!-- Footer Section -->
-                <div class="rm-footer-section">
-                    ${data.sellerType ? `<div class="rm-seller-type">${esc(data.sellerType.toUpperCase())}</div>` : '<div class="rm-seller-type"></div>'}
-                    <div class="rm-postage-info">
-                        ${data.postage ? `<div class="rm-postage-cost"><span>Postage Cost</span><strong>${postageDisplay}</strong></div>` : ''}
-                        ${data.postByDate ? `<div class="rm-post-by"><span>Post by the end of</span><strong>${esc(data.postByDate)}</strong></div>` : ''}
-                        <div class="rm-printed-from"><span>Paid and printed from</span><strong>${esc(data.printedFrom)}</strong></div>
+                <!-- Row 5: Address -->
+                <div class="rml-address">
+                    <div class="rml-recipient">
+                        <div class="rml-addr-line rml-addr-name">${esc(data.recipientName.toUpperCase())}</div>
+                        ${data.recipientAddr1 ? `<div class="rml-addr-line">${esc(data.recipientAddr1)}</div>` : ''}
+                        ${data.recipientAddr2 ? `<div class="rml-addr-line">${esc(data.recipientAddr2)}</div>` : ''}
+                        ${data.recipientCity ? `<div class="rml-addr-line">${esc(data.recipientCity)}</div>` : ''}
+                        <div class="rml-addr-line rml-addr-pc">${esc(data.recipientPostcode.toUpperCase())}</div>
+                    </div>
+                    <div class="rml-return">
+                        ${returnLines.map(l => `<span>${esc(l)}</span>`).join('')}
                     </div>
                 </div>
 
-                <!-- Bottom Footer -->
-                <div class="rm-bottom-footer">
-                    Royal Mail: UK's lowest average parcel carbon footprint 200g CO2e
+                <!-- Row 6: Footer info -->
+                <div class="rml-footer">
+                    <div class="rml-seller">${data.sellerType ? esc(data.sellerType.toUpperCase()) : ''}</div>
+                    <div class="rml-payment">
+                        ${postageDisplay ? `<div class="rml-pay-row"><span>Postage Cost</span><strong>${postageDisplay}</strong></div>` : ''}
+                        ${data.postByDate ? `<div class="rml-pay-row"><span>Post by the end of</span><strong>${esc(data.postByDate)}</strong></div>` : ''}
+                        <div class="rml-pay-row"><span>Paid and printed from</span><strong>${esc(data.printedFrom)}</strong></div>
+                    </div>
                 </div>
+
+                <!-- Row 7: Carbon footer -->
+                <div class="rml-carbon">Royal Mail: UK's lowest average parcel carbon footprint 200g CO2e</div>
             </div>
         `;
 
         labelPreview.innerHTML = labelHtml;
 
-        // Generate barcodes after DOM is ready
+        // Generate barcodes
         setTimeout(async () => {
-            // Generate DataMatrix with Mailmark format
-            const dataMatrixContent = buildDataMatrixContent(data);
-            console.log('DataMatrix content:', dataMatrixContent);
-            await generateDataMatrix(dataMatrixContent, 'datamatrixCanvas');
-
-            // Generate Code 128 with tracking number (no spaces)
-            await generateCode128(trackingClean, 'code128Canvas');
+            const dmContent = buildDataMatrixContent(data);
+            console.log('DataMatrix:', dmContent);
+            await generateDataMatrix(dmContent, 'dmCanvas');
+            await generateCode128(trackingClean, 'c128Canvas');
         }, 50);
 
-        // Enable export buttons
         downloadPdfBtn.disabled = false;
         downloadPngBtn.disabled = false;
         printBtn.disabled = false;
@@ -354,9 +351,9 @@
 
     // ── Export: PNG ─────────────────────────────────────────────────────
     downloadPngBtn.addEventListener('click', async () => {
-        const label = labelPreview.querySelector('.rm-label');
+        const label = labelPreview.querySelector('.rml');
         if (!label) return;
-        const canvas = await html2canvas(label, { scale: 3, backgroundColor: '#ffffff' });
+        const canvas = await html2canvas(label, { scale: 4, backgroundColor: '#ffffff' });
         const link = document.createElement('a');
         link.download = 'royal-mail-tracked24-label.png';
         link.href = canvas.toDataURL('image/png');
@@ -365,12 +362,12 @@
 
     // ── Export: PDF ─────────────────────────────────────────────────────
     downloadPdfBtn.addEventListener('click', async () => {
-        const label = labelPreview.querySelector('.rm-label');
+        const label = labelPreview.querySelector('.rml');
         if (!label) return;
-        const canvas = await html2canvas(label, { scale: 3, backgroundColor: '#ffffff' });
+        const canvas = await html2canvas(label, { scale: 4, backgroundColor: '#ffffff' });
         const imgData = canvas.toDataURL('image/png');
         const { jsPDF } = window.jspdf;
-        // 4x6 inch label = 101.6mm x 152.4mm
+        // 4x6 inch label
         const pdf = new jsPDF({ unit: 'mm', format: [101.6, 152.4] });
         const pdfW = pdf.internal.pageSize.getWidth();
         const pdfH = pdf.internal.pageSize.getHeight();
@@ -382,38 +379,30 @@
     });
 
     // ── Print ───────────────────────────────────────────────────────────
-    printBtn.addEventListener('click', () => {
-        window.print();
-    });
+    printBtn.addEventListener('click', () => window.print());
 
     // ── Clear ───────────────────────────────────────────────────────────
     clearBtn.addEventListener('click', () => {
         fields.forEach((f) => {
             const el = $(f);
             if (el) {
-                if (el.tagName === 'SELECT') {
-                    el.selectedIndex = 0;
-                } else {
-                    el.value = '';
-                }
+                if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                else el.value = '';
             }
         });
         customPrintedFromGroup.style.display = 'none';
-        labelPreview.innerHTML = '<div class="placeholder-message"><p>Fill in the details and click <strong>Generate Label</strong> to preview your Royal Mail Tracked 24 label here.</p></div>';
+        labelPreview.innerHTML = '<div class="placeholder-message"><p>Fill in the details and click <strong>Generate Label</strong> to preview.</p></div>';
         downloadPdfBtn.disabled = true;
         downloadPngBtn.disabled = true;
         printBtn.disabled = true;
     });
 
-    // ── Templates (localStorage) ────────────────────────────────────────
+    // ── Templates ───────────────────────────────────────────────────────
     const STORAGE_KEY = 'rmTracked24Templates';
 
     function getTemplates() {
-        try {
-            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-        } catch {
-            return {};
-        }
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+        catch { return {}; }
     }
 
     function saveTemplates(templates) {
@@ -424,26 +413,20 @@
         const templates = getTemplates();
         const names = Object.keys(templates);
         if (names.length === 0) {
-            templateList.innerHTML = '<div style="font-size:0.8rem;color:#555;">No saved templates yet.</div>';
+            templateList.innerHTML = '<div style="font-size:0.8rem;color:#555;">No saved templates.</div>';
             return;
         }
-        templateList.innerHTML = names
-            .map(
-                (name) => `
+        templateList.innerHTML = names.map(name => `
             <div class="template-item">
                 <button onclick="window._loadTemplate('${esc(name)}')">${esc(name)}</button>
                 <button class="btn btn-danger" onclick="window._deleteTemplate('${esc(name)}')">Delete</button>
-            </div>`
-            )
-            .join('');
+            </div>
+        `).join('');
     }
 
     saveTemplateBtn.addEventListener('click', () => {
         const name = templateNameInput.value.trim();
-        if (!name) {
-            alert('Enter a template name.');
-            return;
-        }
+        if (!name) { alert('Enter a template name.'); return; }
         const templates = getTemplates();
         templates[name] = getFormData();
         saveTemplates(templates);
@@ -463,6 +446,5 @@
         renderTemplates();
     };
 
-    // ── Init ────────────────────────────────────────────────────────────
     renderTemplates();
 })();

@@ -666,277 +666,285 @@ select option {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   ROYAL MAIL TRACKED 24 LABEL STYLES
+   ROYAL MAIL TRACKED 24 LABEL - EXACT TEMPLATE MATCH
+   Label size: 4" x 6" (101.6mm x 152.4mm) = 384px x 576px @ 96dpi
    ══════════════════════════════════════════════════════════════════ */
 
-.rm-label {
-    width: 400px;
+.rml {
+    width: 384px;
+    height: 576px;
     background: #fff;
     border: 1px solid #000;
     font-family: Arial, Helvetica, sans-serif;
     color: #000;
     box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-/* ── Header Row ──────────────────────────────────────────────────── */
-.rm-header {
+/* ── Row 1: Header ───────────────────────────────────────────────── */
+.rml-header {
     display: flex;
     align-items: flex-start;
-    justify-content: space-between;
-    padding: 12px 16px;
+    padding: 8px 12px 6px 12px;
     border-bottom: 1px solid #000;
+    min-height: 68px;
 }
 
-.rm-header-left {
-    flex: 1;
+.rml-header-left {
+    flex: 0 0 auto;
 }
 
-.rm-service-name {
-    font-size: 32px;
+.rml-tracked {
+    font-size: 28px;
     font-weight: 900;
     font-style: italic;
     line-height: 1;
+    letter-spacing: -0.5px;
 }
 
-.rm-signature-text {
-    font-size: 16px;
+.rml-nosig {
+    font-size: 14px;
     font-weight: 400;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
-.rm-header-center {
+.rml-header-mid {
+    flex: 1;
     display: flex;
-    align-items: center;
     justify-content: center;
-    padding: 0 16px;
+    align-items: flex-start;
+    padding-top: 2px;
 }
 
-.rm-24 {
-    font-size: 64px;
+.rml-24 {
+    font-size: 52px;
     font-weight: 900;
     line-height: 1;
 }
 
-.rm-header-right {
+.rml-header-right {
+    flex: 0 0 auto;
     text-align: right;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
 }
 
-.rm-delivered-by {
-    font-size: 10px;
+.rml-delivered {
+    font-size: 9px;
     margin-bottom: 2px;
 }
 
-.rm-logo {
-    width: 80px;
-    height: 35px;
-    border: 2px solid #000;
+.rml-logo-box {
+    width: 72px;
+    height: 38px;
+    border: 1.5px solid #000;
     border-radius: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2px 6px;
-    margin-bottom: 2px;
+    overflow: hidden;
 }
 
-.rm-crown-logo {
-    width: 100%;
-    height: 100%;
+.rm-logo-svg {
+    width: 68px;
+    height: 36px;
 }
 
-.rm-postage-paid {
-    font-size: 9px;
+.rml-postage-paid {
+    font-size: 8px;
+    margin-top: 2px;
 }
 
-/* ── Routing Row ─────────────────────────────────────────────────── */
-.rm-routing-row {
+/* ── Row 2: Routing codes ────────────────────────────────────────── */
+.rml-routing {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 16px;
+    padding: 6px 12px;
     border-bottom: 1px solid #000;
 }
 
-.rm-routing-codes {
+.rml-codes {
     display: flex;
-    gap: 0;
+    gap: 3px;
 }
 
-.rm-sort-code {
+.rml-code {
     background: #000;
     color: #fff;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 900;
-    padding: 4px 12px;
+    padding: 3px 10px;
+    min-width: 50px;
+    text-align: center;
 }
 
-.rm-route-code {
-    background: #000;
-    color: #fff;
-    font-size: 24px;
-    font-weight: 900;
-    padding: 4px 12px;
-    margin-left: 2px;
+.rml-code-inv {
+    /* Same style, second box */
 }
 
-.rm-parcel-info {
-    text-align: right;
+.rml-parcel-box {
     border: 1px solid #000;
+    padding: 3px 10px;
+    text-align: center;
+}
+
+.rml-parcel-type {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.rml-parcel-weight {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* ── Row 3: Reference ────────────────────────────────────────────── */
+.rml-ref {
     padding: 4px 12px;
-}
-
-.rm-parcel-type {
     font-size: 12px;
-    font-weight: 600;
-}
-
-.rm-weight {
-    font-size: 14px;
-    font-weight: 700;
-}
-
-/* ── Reference Row ───────────────────────────────────────────────── */
-.rm-reference-row {
-    padding: 6px 16px;
-    font-size: 13px;
-    font-family: 'JetBrains Mono', monospace;
-    color: #333;
+    font-family: Arial, sans-serif;
+    color: #444;
     border-bottom: 1px solid #000;
+    min-height: 22px;
 }
 
-/* ── Barcode Row ─────────────────────────────────────────────────── */
-.rm-barcode-row {
+/* ── Row 4: Barcodes ─────────────────────────────────────────────── */
+.rml-barcodes {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 16px;
+    padding: 10px 12px;
     border-bottom: 1px solid #000;
-    gap: 16px;
+    gap: 12px;
+    min-height: 90px;
 }
 
-.rm-datamatrix {
-    flex-shrink: 0;
+.rml-dm {
+    flex: 0 0 auto;
 }
 
-.rm-datamatrix canvas {
-    display: block;
+.rml-dm canvas {
+    width: 72px !important;
+    height: 72px !important;
 }
 
-.rm-code128-container {
+.rml-c128 {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
 }
 
-.rm-code128-container canvas {
-    display: block;
-    max-width: 100%;
+.rml-c128 canvas {
+    width: 200px !important;
+    height: 50px !important;
 }
 
-.rm-tracking-text {
-    margin-top: 6px;
-    font-size: 13px;
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 600;
-    letter-spacing: 1px;
-}
-
-/* ── Address Section ─────────────────────────────────────────────── */
-.rm-address-section {
-    display: flex;
-    padding: 16px;
-    border-bottom: 1px solid #000;
-    min-height: 120px;
-}
-
-.rm-recipient-address {
-    flex: 1;
-}
-
-.rm-address-line {
-    font-size: 16px;
-    line-height: 1.4;
-}
-
-.rm-address-line.rm-name {
-    font-weight: 700;
-}
-
-.rm-address-line.rm-postcode {
-    font-size: 20px;
-    font-weight: 700;
+.rml-tracking {
     margin-top: 4px;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    text-align: center;
 }
 
-.rm-return-address {
-    width: 24px;
+/* ── Row 5: Address ──────────────────────────────────────────────── */
+.rml-address {
+    display: flex;
+    padding: 10px 12px;
+    border-bottom: 1px solid #000;
+    flex: 1;
+    min-height: 110px;
+}
+
+.rml-recipient {
+    flex: 1;
+}
+
+.rml-addr-line {
+    font-size: 15px;
+    line-height: 1.35;
+}
+
+.rml-addr-name {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.rml-addr-pc {
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+.rml-return {
+    width: 22px;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
+    justify-content: flex-end;
     writing-mode: vertical-rl;
     text-orientation: mixed;
     transform: rotate(180deg);
-    font-size: 9px;
-    line-height: 1.3;
+    font-size: 8px;
+    line-height: 1.25;
     color: #333;
-    padding-left: 12px;
+    margin-left: 8px;
+    padding-left: 8px;
     border-left: 1px solid #ccc;
-    margin-left: 12px;
 }
 
-.rm-return-address span {
+.rml-return span {
     white-space: nowrap;
 }
 
-/* ── Footer Section ──────────────────────────────────────────────── */
-.rm-footer-section {
+/* ── Row 6: Footer ───────────────────────────────────────────────── */
+.rml-footer {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: 12px 16px;
+    padding: 8px 12px;
     border-bottom: 1px solid #000;
-    min-height: 80px;
+    min-height: 72px;
 }
 
-.rm-seller-type {
-    font-size: 18px;
+.rml-seller {
+    font-size: 16px;
     font-weight: 900;
-    line-height: 1.2;
-    max-width: 140px;
+    line-height: 1.15;
+    max-width: 120px;
 }
 
-.rm-postage-info {
+.rml-payment {
     text-align: right;
-    font-size: 11px;
 }
 
-.rm-postage-info > div {
-    margin-bottom: 4px;
+.rml-pay-row {
+    margin-bottom: 2px;
 }
 
-.rm-postage-info span {
+.rml-pay-row span {
     display: block;
-    color: #555;
+    font-size: 9px;
+    color: #333;
 }
 
-.rm-postage-info strong {
+.rml-pay-row strong {
     display: block;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
 }
 
-.rm-postage-cost strong {
-    font-size: 16px;
+.rml-pay-row:first-child strong {
+    font-size: 14px;
 }
 
-/* ── Bottom Footer ───────────────────────────────────────────────── */
-.rm-bottom-footer {
-    padding: 6px 16px;
-    font-size: 8px;
+/* ── Row 7: Carbon footer ────────────────────────────────────────── */
+.rml-carbon {
+    padding: 4px 12px;
+    font-size: 7px;
     color: #666;
-    text-align: left;
 }
