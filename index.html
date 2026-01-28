@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professor Label Studio</title>
+    <title>Professor Label Studio - Royal Mail Tracked 24</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- bwip-js for DataMatrix and Code 128 barcodes -->
+    <script src="https://cdn.jsdelivr.net/npm/bwip-js@4.1.1/dist/bwip-js-min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -18,7 +19,7 @@
                 <div class="brand-icon">PL</div>
                 <div>
                     <h1>Professor Label Studio</h1>
-                    <p class="subtitle">Professional UK Shipping Label Generator</p>
+                    <p class="subtitle">Royal Mail Tracked 24 Label Generator</p>
                 </div>
             </div>
         </div>
@@ -28,100 +29,38 @@
         <div class="app-layout">
             <!-- Left: Form -->
             <section class="form-panel">
-                <div class="panel-section">
-                    <h2>Courier Template</h2>
-                    <div class="courier-grid" id="courierGrid">
-                        <button class="courier-btn selected" data-courier="royal-mail">
-                            <span class="courier-logo royal-mail">RM</span>
-                            <span>Royal Mail</span>
-                        </button>
-                        <button class="courier-btn" data-courier="ups">
-                            <span class="courier-logo ups">UPS</span>
-                            <span>UPS</span>
-                        </button>
-                        <button class="courier-btn" data-courier="evri">
-                            <span class="courier-logo evri">Evri</span>
-                            <span>Evri</span>
-                        </button>
-                        <button class="courier-btn" data-courier="dpd">
-                            <span class="courier-logo dpd">DPD</span>
-                            <span>DPD</span>
-                        </button>
-                        <button class="courier-btn" data-courier="dhl">
-                            <span class="courier-logo dhl">DHL</span>
-                            <span>DHL</span>
-                        </button>
-                        <button class="courier-btn" data-courier="yodel">
-                            <span class="courier-logo yodel">Y</span>
-                            <span>Yodel</span>
-                        </button>
-                    </div>
-                </div>
 
                 <div class="panel-section">
                     <h2>Service Type</h2>
-                    <select id="serviceType">
-                        <!-- Populated dynamically -->
+                    <select id="signatureType">
+                        <option value="no-signature">Tracked 24 - No Signature</option>
+                        <option value="signature">Tracked 24 - Signature Required</option>
                     </select>
                 </div>
 
                 <div class="panel-section">
-                    <h2>Sender Details</h2>
+                    <h2>Tracking &amp; Routing</h2>
                     <div class="form-group">
-                        <label for="senderName">Name / Business</label>
-                        <input type="text" id="senderName" placeholder="e.g. Almara Ltd">
-                    </div>
-                    <div class="form-group">
-                        <label for="senderAddr1">Address Line 1</label>
-                        <input type="text" id="senderAddr1" placeholder="e.g. 10 Downing Street">
-                    </div>
-                    <div class="form-group">
-                        <label for="senderAddr2">Address Line 2</label>
-                        <input type="text" id="senderAddr2" placeholder="e.g. Westminster">
+                        <label for="trackingNumber">Tracking Number</label>
+                        <input type="text" id="trackingNumber" placeholder="e.g. MZ 3170 8295 1GB">
+                        <span class="field-hint">Enter your purchased Royal Mail tracking number</span>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="senderCity">City</label>
-                            <input type="text" id="senderCity" placeholder="e.g. London">
+                            <label for="sortCode">Sort Code</label>
+                            <input type="text" id="sortCode" placeholder="e.g. Q27" maxlength="4">
+                            <span class="field-hint">Mail centre code</span>
                         </div>
                         <div class="form-group">
-                            <label for="senderPostcode">Postcode</label>
-                            <input type="text" id="senderPostcode" placeholder="e.g. SW1A 2AA">
+                            <label for="routingCode">Routing Code</label>
+                            <input type="text" id="routingCode" placeholder="e.g. N4A" maxlength="4">
+                            <span class="field-hint">Usually from postcode</span>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="senderPhone">Phone (optional)</label>
-                        <input type="tel" id="senderPhone" placeholder="e.g. 07700 900000">
-                    </div>
-                </div>
-
-                <div class="panel-section">
-                    <h2>Recipient Details</h2>
-                    <div class="form-group">
-                        <label for="recipientName">Name</label>
-                        <input type="text" id="recipientName" placeholder="e.g. Jane Smith">
-                    </div>
-                    <div class="form-group">
-                        <label for="recipientAddr1">Address Line 1</label>
-                        <input type="text" id="recipientAddr1" placeholder="e.g. 42 High Street">
-                    </div>
-                    <div class="form-group">
-                        <label for="recipientAddr2">Address Line 2</label>
-                        <input type="text" id="recipientAddr2" placeholder="e.g. Flat 3">
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="recipientCity">City</label>
-                            <input type="text" id="recipientCity" placeholder="e.g. Manchester">
-                        </div>
-                        <div class="form-group">
-                            <label for="recipientPostcode">Postcode</label>
-                            <input type="text" id="recipientPostcode" placeholder="e.g. M1 1AA">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="recipientPhone">Phone (optional)</label>
-                        <input type="tel" id="recipientPhone" placeholder="e.g. 07700 900001">
+                        <label for="reference">Reference Number</label>
+                        <input type="text" id="reference" placeholder="e.g. 11-02D 71C AC8">
+                        <span class="field-hint">Internal reference (shown on label)</span>
                     </div>
                 </div>
 
@@ -129,17 +68,94 @@
                     <h2>Parcel Details</h2>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="weight">Weight (kg)</label>
-                            <input type="number" id="weight" placeholder="e.g. 1.5" step="0.1" min="0">
+                            <label for="parcelType">Parcel Type</label>
+                            <select id="parcelType">
+                                <option value="Small Parcel">Small Parcel</option>
+                                <option value="Medium Parcel">Medium Parcel</option>
+                                <option value="Large Letter">Large Letter</option>
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label for="reference">Reference #</label>
-                            <input type="text" id="reference" placeholder="e.g. ORD-20241">
+                            <label for="weight">Weight</label>
+                            <input type="text" id="weight" placeholder="e.g. 2kg">
                         </div>
                     </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="postage">Postage Cost</label>
+                            <input type="text" id="postage" placeholder="e.g. £4.29">
+                        </div>
+                        <div class="form-group">
+                            <label for="postByDate">Post By Date</label>
+                            <input type="text" id="postByDate" placeholder="e.g. 14.04.2025">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h2>Recipient (Deliver To)</h2>
                     <div class="form-group">
-                        <label for="instructions">Delivery Instructions</label>
-                        <input type="text" id="instructions" placeholder="e.g. Leave with neighbour">
+                        <label for="recipientName">Name</label>
+                        <input type="text" id="recipientName" placeholder="e.g. TESTING">
+                    </div>
+                    <div class="form-group">
+                        <label for="recipientAddr1">Address Line 1</label>
+                        <input type="text" id="recipientAddr1" placeholder="e.g. London">
+                    </div>
+                    <div class="form-group">
+                        <label for="recipientAddr2">Address Line 2</label>
+                        <input type="text" id="recipientAddr2" placeholder="e.g. Po Box 81703">
+                    </div>
+                    <div class="form-group">
+                        <label for="recipientCity">City / Town</label>
+                        <input type="text" id="recipientCity" placeholder="e.g. London">
+                    </div>
+                    <div class="form-group">
+                        <label for="recipientPostcode">Postcode</label>
+                        <input type="text" id="recipientPostcode" placeholder="e.g. N4 9PT">
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h2>Return Address (Sender)</h2>
+                    <div class="form-group">
+                        <label for="senderName">Name / Business</label>
+                        <input type="text" id="senderName" placeholder="e.g. London">
+                    </div>
+                    <div class="form-group">
+                        <label for="senderAddr1">Address Line 1</label>
+                        <input type="text" id="senderAddr1" placeholder="e.g. Po Box 5658">
+                    </div>
+                    <div class="form-group">
+                        <label for="senderCity">City</label>
+                        <input type="text" id="senderCity" placeholder="e.g. Manchester">
+                    </div>
+                    <div class="form-group">
+                        <label for="senderPostcode">Postcode</label>
+                        <input type="text" id="senderPostcode" placeholder="e.g. M61 0VU">
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h2>Label Footer</h2>
+                    <div class="form-group">
+                        <label for="sellerType">Seller Type (optional)</label>
+                        <input type="text" id="sellerType" placeholder="e.g. MARKETPLACE SELLER">
+                        <span class="field-hint">Leave blank if not applicable</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="printedFrom">Paid and printed from</label>
+                        <select id="printedFrom">
+                            <option value="Click & Drop">Click & Drop</option>
+                            <option value="eBay Simple Delivery">eBay Simple Delivery</option>
+                            <option value="Parcel2Go">Parcel2Go</option>
+                            <option value="ShipStation">ShipStation</option>
+                            <option value="Custom">Custom...</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="customPrintedFromGroup" style="display:none;">
+                        <label for="customPrintedFrom">Custom Source</label>
+                        <input type="text" id="customPrintedFrom" placeholder="Enter custom source">
                     </div>
                 </div>
 
@@ -147,7 +163,7 @@
                     <h2>Saved Templates</h2>
                     <div class="template-actions">
                         <input type="text" id="templateName" placeholder="Template name...">
-                        <button id="saveTemplateBtn" class="btn btn-secondary">Save Current</button>
+                        <button id="saveTemplateBtn" class="btn btn-secondary">Save</button>
                     </div>
                     <div id="templateList" class="template-list">
                         <!-- Populated dynamically -->
@@ -156,7 +172,7 @@
 
                 <div class="form-actions">
                     <button id="generateBtn" class="btn btn-primary">Generate Label</button>
-                    <button id="clearBtn" class="btn btn-secondary">Clear Form</button>
+                    <button id="clearBtn" class="btn btn-secondary">Clear</button>
                 </div>
             </section>
 
@@ -165,15 +181,15 @@
                 <div class="preview-header">
                     <h2>Label Preview</h2>
                     <div class="export-actions">
-                        <button id="downloadPdfBtn" class="btn btn-primary" disabled>Download PDF</button>
-                        <button id="downloadPngBtn" class="btn btn-secondary" disabled>Download PNG</button>
+                        <button id="downloadPdfBtn" class="btn btn-primary" disabled>PDF</button>
+                        <button id="downloadPngBtn" class="btn btn-secondary" disabled>PNG</button>
                         <button id="printBtn" class="btn btn-secondary" disabled>Print</button>
                     </div>
                 </div>
                 <div class="preview-area">
                     <div id="labelPreview" class="label-container">
                         <div class="placeholder-message">
-                            <p>Fill in the details and click <strong>Generate Label</strong> to preview your shipping label here.</p>
+                            <p>Fill in the details and click <strong>Generate Label</strong> to preview your Royal Mail Tracked 24 label here.</p>
                         </div>
                     </div>
                 </div>
@@ -181,6 +197,6 @@
         </div>
     </main>
 
-    <script src="app.js"></script>
+    <script src="royalmail-tracked24.js"></script>
 </body>
 </html>
